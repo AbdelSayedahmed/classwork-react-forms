@@ -2,16 +2,12 @@ import React, { useState } from "react";
 import "./Form.css";
 
 export default function Form() {
-  const initialFormData = {
-    default: "",
-  };
-
   const [values, setValues] = useState("");
   const [operation, setOperation] = useState("");
   const [result, setResult] = useState("");
   const [inputError, setInputError] = useState(false);
 
-  const numbers = values.split(",").map((x) => parseInt(x));
+  const numbers = values.split(",").map((x) => parseFloat(x.trim()));
 
   function getMode(arr) {
     const obj = arr.reduce((acc, num) => {
@@ -27,7 +23,9 @@ export default function Form() {
 
     let mathResult = 0;
 
-    if (numbers.some(isNaN)) {
+    setResult("");
+
+    if (numbers.some(isNaN) || numbers.includes(0) && operation === "quotient") {
       setInputError(true);
       setResult("Invalid Input!");
       return;
@@ -56,24 +54,22 @@ export default function Form() {
         mathResult = "Invalid Input!";
         break;
     }
-
     setResult(mathResult);
+
+    if (mathResult === "Invalid Input!") {
+      console.log("Invalid input detected, early return.")
+      return;
+    }
+
     setInputError(false);
     setValues("");
     setOperation("");
   };
 
-  const handleReset = () => {
-    if (result !== "Invalid Input!") {
-      setValues("");
-      setOperation("");
-    }
-    setInputError(false);
-  };
-
   return (
     <>
       <form>
+        <label htmlFor="values">Values:</label>
         <input
           id="values"
           name="values"
@@ -82,9 +78,12 @@ export default function Form() {
           onChange={(e) => {
             setValues(e.target.value);
             setInputError(false);
+            setResult("");
           }}
           className={inputError ? "error" : ""}
+          required
         />
+        <label htmlFor="operation">Operation:</label>
         <select
           id="operation"
           name="operation"
@@ -94,8 +93,9 @@ export default function Form() {
             setInputError(false);
           }}
           className={inputError ? "error" : ""}
+          required
         >
-          <option value=""></option>
+          <option value="" disabled selected></option>
           <option value="average">Average</option>
           <option value="mode">Mode</option>
           <option value="sum">Sum</option>
@@ -104,12 +104,10 @@ export default function Form() {
           <option value="quotient">Quotient</option>
         </select>
         <button
-          type="submit"
-          onClick={(e) => {
-            handleSubmit(e);
-            handleReset();
-          }}
-        >Calculate</button>
+          type="button"
+          onClick={(e) => handleSubmit(e)}
+        >Calculate
+        </button>
       </form>
       <section id="result">
         <p>{result}</p>
